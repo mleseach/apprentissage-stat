@@ -18,7 +18,7 @@ from sklearn import tree, datasets, model_selection
 from itertools import product
 from collections import defaultdict
 
-from tp_arbres_source import (rand_gauss, rand_bi_gauss, rand_tri_gauss,
+from lib.tp_arbres_source import (rand_gauss, rand_bi_gauss, rand_tri_gauss,
                               rand_checkers, rand_clown,
                               plot_2d, frontiere)
 ```
