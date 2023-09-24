@@ -3,7 +3,7 @@
 Ce répertoire contient mon [rapport](rapport-tp2-arbres.pdf) du TP2 de hax907x au format pdf ainsi que tout les élements nécessaires à sa reproductibilité.
 
 Deux fichiers annexes sont également disponible dans le dossier [graphviz](graphviz)
- 
+
 ## Auteur
 
 Mathieu Le Séac'h
@@ -16,7 +16,7 @@ Vous devez avoir Python (3.11 ou plus), Poetry et Quarto installés sur votre ma
 
 - Python : https://www.python.org/downloads/
 - Poetry : https://python-poetry.org/docs/#installation
-- Quarto : https://quarto.org/docs/installation.html
+- Quarto : https://quarto.org/docs/get-started/
 
 Vous pouvez utiliser un gestionnaire de paquet autre que poetry tant que les dépendances sont bien installées dans votre environnement courant.
 
