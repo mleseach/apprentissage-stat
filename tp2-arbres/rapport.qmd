@@ -225,9 +225,11 @@ for i, criterion in enumerate(scores.keys()):
 
 plt.draw()
 
+best_depth = np.argmax(scores["entropy"]) + 1
+best_classifier = classifiers["entropy"][best_depth - 1]
+
 dot_data = tree.export_graphviz(
     best_classifier, out_file=None, 
-    feature_names=["x", "y"],  
     filled=True, rounded=True,  
     special_characters=True
 )  
