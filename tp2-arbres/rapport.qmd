@@ -289,6 +289,8 @@ On remarque que l'estimation du risque via la cross-validation semble plus régu
 
 ### Q8)
 
+On cherche maintenant à estimer la performance de chacun de nos classificateurs en fonction du nombre de données d'entraînement disponible. Pour ce faire on utilise la fonction `sklearn.model_selection.LearningCurveDisplay`
+
 ```{python}
 
 for criterion in classifiers.keys():
@@ -300,7 +302,7 @@ for criterion in classifiers.keys():
         model_selection.LearningCurveDisplay.from_estimator(
             classifier,
             X = X, y = y,
-            train_sizes = np.linspace(0.1, 1, 10),
+            train_sizes = np.linspace(0.001, 1, 20),
             line_kw = {"marker": "o"},
             std_display_style = "fill_between",
             score_name = "Accuracy",
@@ -309,10 +311,20 @@ for criterion in classifiers.keys():
         )
 
         sub_ax.set_title(
-            (f"Learning Curve for {criterion.capitalize()} criterion"
+            (f"Learning Curve for {criterion.capitalize()} criterion "
             f"(max_depth={i * skip + 1})"),
             weight="bold"
         )
         
         sub_ax.legend(["Training Score", "Test Score"])
 ```
+
+On peut remarquer plusieurs choses. La première c'est que lorsqu'on entraîne le modèle avec trop peu de données comparé à la profondeur maximum, le modèle aura toujours tendance à être très bon sur les données d'apprentissage quelque soit sa vrai performance sur les données de test. Ensuite jusqu'à un certain point, plus la profondeur max de l'arbre est grande, plus le classificateur sera performant sur les données de test, même lorsque les données d'apprentissage seront peu nombreuses. Cependant quelque soit la profondeur, on n'arrive pas à dépasser 90% de précision.
+
+### Conclusion
+
+Pour tester le risque d'un modèle il ne faut surtout pas utiliser les données d'entraînement. Dans le pire des cas il faut utiliser un jeu de test indépendant de nos données d'apprentissage, et si on peut se le permettre le mieux est d'estimer le risque par cross-validation via par exemple l'algorithme KFold.
+
+Ensuite un modèle a de paramètre, plus il va être performant sur ses données d'apprentissage, notamment dans le cas où il aura plus de paramètres (ici de règles de décisions) que de données à disposition où là il ne fera aucune erreur sur ses données d'apprentissage.
+
+Enfin augmenter le nombre de paramètres permet d'améliorer les performances du modèle, jusqu'à un certain point, même lorsque le modèle est idéalement adapté aux données (comme dans le cas de `rand_checkers`). On peut donc faire de la sélection de modèle en estimant le risque pour voir quel modèle performe le mieux avec le moins de paramètres possibles.

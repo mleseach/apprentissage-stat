@@ -11,7 +11,6 @@ Mathieu Le Séac'h
 ## Todo
 
 - répondre à la question 1
-- interpréter les résultats de la question 8
 - ajouter des labels et captions aux figures
 - ajouter des tables pour les résultats au lieu de prints
 - vérifier l'orthographe et les typos
