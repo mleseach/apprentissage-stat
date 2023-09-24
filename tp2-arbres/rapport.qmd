@@ -11,11 +11,13 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import graphviz
 from matplotlib import rc
 
 from sklearn import tree, datasets, model_selection
 
 from itertools import product
+from functools import partial
 from collections import defaultdict
 
 from lib.tp_arbres_source import (rand_gauss, rand_bi_gauss, rand_tri_gauss,
@@ -29,7 +31,7 @@ Dans le cadre d'une régression, on peut utiliser TODO comme mesure d'homogéné
 
 ### Q2)
 
-On cherche à tracer les courbes donnant le pourcentage d'erreurs commises en fonction de la profondeur maximale de l'arbre pour
+On cherche à tracer les courbes donnant le pourcentage d'erreurs commises en fonction de la profondeur maximale de l'arbre. Pour ça on va entraîner nos arbres de décision sur des données générées puis on va tester la précision des prédictions sur ces mêmes données.
 
 ```{python}
 np.random.seed(10)
@@ -39,46 +41,50 @@ depths = range(1, 14)
 
 n = 456
 data = rand_checkers(n//4, n//4, n//4, n//4)
-X_fit = data[:, :2]
-y_fit = data[:, 2]
+X_train = data[:, :2]
+y_train = data[:, 2]
 
+# (T -> S) -> Dict[K, List[T]] -> Dict[K, List[S]]
+# applique une fonction à chaque valeur d'un dictionnaire de liste
+def fmap_dict_list(f, dic):
+    return { key: list(map(f, value)) for key, value in dic.items() }
 
-def fit_all_classifiers(criterions, depths, X_fit, y_fit):
+# instancie tout les classificateurs
+def create_all_classifiers(criterions, depths):
     classifiers = defaultdict(list)
-
     for (criterion, max_depth) in product(criterions, depths):
         classifier = tree.DecisionTreeClassifier(
             criterion=criterion,
             max_depth=max_depth,
-        ).fit(
-            X_fit, y_fit
         )
 
         classifiers[criterion].append(classifier)
 
     return classifiers
 
-classifiers = fit_all_classifiers(criterions, depths, X_fit, y_fit)
+# entraîne tout les classificateurs sur les données X_train et y_train
+def fit_all_classifiers(classifiers, X_train, y_train):
+    return fmap_dict_list(
+        lambda classifier: classifier.fit(X_train, y_train),
+        classifiers
+    )
 
+# calcule tout les scores des classificateurs sur les données X_test et y_test
 def compute_all_scores(classifiers, X_test, y_test):
-    scores = dict()
+    return fmap_dict_list(
+        lambda classifier: classifier.score(X_test, y_test),
+        classifiers
+    )
 
-    for criterion in classifiers.keys():
-        scores[criterion] = list(map(
-            lambda classifier: classifier.score(X_test, y_test),
-            classifiers[criterion]
-        ))
+classifiers = create_all_classifiers(criterions, depths)
+classifiers = fit_all_classifiers(classifiers, X_train, y_train)
+scores = compute_all_scores(classifiers, X_train, y_train)
 
-    return scores
-
-scores = compute_all_scores(classifiers, X_fit, y_fit)
-
-
+print(scores)
 plt.figure()
-
 for criterion in scores.keys():
     plt.plot(depths, scores[criterion], label=f"{criterion} score")
-    print(f"Scores with {criterion} criterion: {scores[criterion]}")
+    print(f"Scores with {criterion} criterion on training data: {scores[criterion]}")
 
 plt.xlabel('Max depth')
 plt.ylabel('Accuracy Score')
@@ -87,7 +93,7 @@ plt.draw()
 
 ```
 
-Comme on s'y attendait, la précision des arbres étant testés sur les données d'apprentissage, plus le modèle a de paramètres (ici de profondeur), mieux il va connaître les données d'apprentissage.
+Comme on pouvait s'y attendre, la précision des arbres étant testés sur les données d'apprentissage, plus le modèle a de paramètres (ici de profondeur), mieux il va connaître les données d'apprentissage et donc plus il va être précis dans ses prédictions. On atteint même une précision de 100% pour le critère de Gini et 99.3% pour le critère d'Entropie, ça semble indiquer soit que notre modèle est excellent, soit un cas de sur-apprentissage.
 
 
 ### Q3)
@@ -104,27 +110,42 @@ plt.figure(figsize=(15, 10))
 plt.subplot(2, 2, 1)
 frontiere(
     lambda x: best_classifier.predict(x.reshape((1, -1))),
-    X_fit, y_fit,
+    X_train, y_train,
     step=100, samples=False
 )
 
 plt.subplot(2, 1, 1)
-plot_2d(X_fit, y_fit)
+plot_2d(X_train, y_train)
 frontiere(
     lambda x: best_classifier.predict(x.reshape((1, -1))),
-    X_fit, y_fit,
+    X_train, y_train,
     step=100, samples=False
 )
 
 ```
 
-Dans l'ensemble le damier ressemble bien à celui des données, cependant on remarque certains rectangles
+Dans l'ensemble le damier ressemble bien à celui des données, cependant on remarque certains rectangles semblent assez exotiques et ne servent qu'à capturer une infîme partie des données. C'est un des symptômes du sur-apprentissage.
 
 ### Q4)
 
-TODO: exporter l'arbre
+Maintenant on cherche à visualiser les règles de décisions apprises par l'arbre dans un format intelligible. Pour ce faire on utilise la fonction `tree.export_graphviz` de scikit-learn et la librairie python `graphviz` qu'on exportera dans le fichier `graphviz/checkers.pdf`.
+
+```{python}
+dot_data = tree.export_graphviz(
+    best_classifier, out_file=None, 
+    feature_names=["x", "y"],  
+    filled=True, rounded=True,  
+    special_characters=True
+)  
+graph = graphviz.Source(dot_data)  
+graph.render("graphviz/checkers")
+```
+
+En accords avec le score de prédiction du classificateur, une immense majorité des feuilles de l'arbre de décision ont une entropie nulle, c'est à dire que le classificateur a trouvé une règle qui permet de prédire exactement la catégorie d'une donnée d'entraînement. De plus il y a aussi une grande partie de feuilles qui ne servent qu'à prédire une seule donnée d'entraînement (sample = 1), c'est à dire que le classificateur a créé une règle spécifique pour une seule donnée observée. Comme pressenti à la question précédente, on est clairement dans un cas de sur-apprentissage.
 
 ### Q5)
+
+Pour avoir une estimation de la précision de notre arbre de décision plus précise, on va générer un échantillon de test et estimer la précision de notre classificateur sur ces données de test puis les comparer avec l'estimation de la précision sur les données d'entraînement.
 
 ```{python}
 n_test = 160
@@ -134,53 +155,162 @@ y_test = data_test[:, 2]
 
 scores_test = compute_all_scores(classifiers, X_test, y_test)
 
-plt.figure()
-for criterion in criterions:
-    plt.plot(depths, scores_test[criterion], label=f"{criterion} score test")
-    print(f"Scores on test data with {criterion} criterion: {scores_test[criterion]}")
-    plt.plot(depths, scores[criterion], label=f"{criterion} score ")
-    print(f"Scores with {criterion} criterion: {scores[criterion]}")
+plt.figure(figsize=(10, 10))
+for i, criterion in enumerate(scores.keys()):
+    plt.subplot(2, 1, i+1)
+    plt.plot(
+        depths, scores[criterion],
+        label=f"{criterion.capitalize()} score with training data"
+    )
 
-plt.xlabel('Max depth')
-plt.ylabel('Accuracy Score')
-plt.legend()
+    print(f"Scores with {criterion} criterion on training data: {scores[criterion]}")
+
+    plt.plot(
+        depths, scores_test[criterion],
+        label=f"{criterion.capitalize()} score with test data"
+    )
+
+    print(f"Scores with {criterion} criterion on test data: {scores_test[criterion]}")
+
+    plt.title(f"{criterion.capitalize()} criterion", weight="bold")
+    plt.xlabel("Max depth")
+    plt.ylabel("Accuracy Score")
+    plt.legend()
+
 plt.draw()
+
 ```
+
+Pour le critère de Gini on remarque que la précision sur les données de test cesse de croître à partir de la profondeur max de 8. De plus pour les deux critères (de Gini et d'entropie), on remarque que cette fois-ci la précision ne dépasse par le seuil des 90% et ce même en augmentant la profondeur maximum de l'arbre. Donc pour chacun des critères l'estimation de la précision avec les données d'entraînement ont clairement surestimé la précision réelle de l'arbre de décision. Il n'y a plus de doute sur le fait qu'on est dans un cas de sur-apprentissage. En effet notre modèle prédit presque parfaitement les données d'entraînement mais il surestime sa capacité de généralisation à des données de test.
 
 ### Q6)
 
-```{python}
-digits = datasets.load_digits()
-X = digits.data
-y = digits.target
+On cherche maintenant à reproduire les questions précédentes sur des données réelles issu du jeu de données "digits" fourni par la librairie scikit-learn.
 
-X_fit, X_test, y_fit, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=10)
+```{python}
+X, y = datasets.load_digits(return_X_y=True)
+
+X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=10)
 
 criterions = ["gini", "entropy"]
 depths = range(1, 14)
 
-classifiers = fit_all_classifiers(criterions, depths, X_fit, y_fit)
+classifiers = create_all_classifiers(criterions, depths)
+classifiers = fit_all_classifiers(classifiers, X_train, y_train)
 
-scores = compute_all_scores(classifiers, X_fit, y_fit)
+scores = compute_all_scores(classifiers, X_train, y_train)
 scores_test = compute_all_scores(classifiers, X_test, y_test)
 
-plt.figure()
+plt.figure(figsize=(10, 10))
+for i, criterion in enumerate(scores.keys()):
+    plt.subplot(2, 1, i+1)
+    plt.plot(
+        depths, scores[criterion],
+        label=f"{criterion.capitalize()} score with training data"
+    )
 
-for criterion in scores.keys():
-    plt.plot(depths, scores_test[criterion], label=f"{criterion} score test")
-    print(f"Scores on test data with {criterion} criterion: {scores_test[criterion]}")
-    plt.plot(depths, scores[criterion], label=f"{criterion} score ")
-    print(f"Scores with {criterion} criterion: {scores[criterion]}")
+    print(f"Scores with {criterion} criterion on training data: {scores[criterion]}")
 
-plt.xlabel('Max depth')
-plt.ylabel('Accuracy Score')
-plt.legend()
+    plt.plot(
+        depths, scores_test[criterion],
+        label=f"{criterion.capitalize()} score with test data"
+    )
+
+    print(f"Scores with {criterion} criterion on test data: {scores_test[criterion]}")
+
+    plt.title(f"{criterion.capitalize()} criterion", weight="bold")
+    plt.xlabel("Max depth")
+    plt.ylabel("Accuracy Score")
+    plt.legend()
+
 plt.draw()
+
+dot_data = tree.export_graphviz(
+    best_classifier, out_file=None, 
+    feature_names=["x", "y"],  
+    filled=True, rounded=True,  
+    special_characters=True
+)  
+graph = graphviz.Source(dot_data)  
+graph.render("graphviz/digits")
+
 
 ```
 
-on retrouve les mêmes problèmes
+on retrouve exactement les mêmes problèmes de surapprentissage avec qu'avec nos données simulées. À savoir que sur les données d'entraînement on atteint une précision proche de 100% alors que sur les données de test on ne dépasse jamais le seuil de 90% de précision, donc une surestimation de la précision dans le premier cas. De plus en analysant l'arbre de décision généré (`graphviz/digits.pdf`), on observe le même phénomène avec la plupart des feuilles d'entropie nulle et avec seulement une ou deux donnée dedans.
 
 ## Méthodes de choix de paramètres - Sélection de modèle
 
 ### Q7)
+
+On cherche maintenant à estimer le risque (ou de manière équivalente la précision) de manière plus précise en ayant recours à la cross-validation. Le principe consiste à répéter l'étape d'entraînement et d'estimation du risque sur plusieurs partitions en deux de notre jeu de données puis à prendre la moyenne des risques estimés. On va utiliser la fonction `skleanr.model_selection.cross_val_score` avec l'algorithme KFold.
+
+```{python} 
+
+classifiers = create_all_classifiers(criterions, depths)
+
+scores_crossval = fmap_dict_list(
+    lambda classifier: np.mean(model_selection.cross_val_score(
+        classifier, X, y,
+        cv = model_selection.KFold(5, shuffle=True, random_state=0)
+    )),
+    classifiers
+)
+
+plt.figure(figsize=(10, 10))
+for i, criterion in enumerate(scores.keys()):
+    plt.subplot(2, 1, i+1)
+    plt.plot(
+        depths, scores[criterion],
+        label=f"{criterion.capitalize()} score with training data"
+    )
+
+    plt.plot(
+        depths, scores_test[criterion],
+        label=f"{criterion.capitalize()} score with test data"
+    )
+
+    plt.plot(
+        depths, scores_crossval[criterion],
+        label=f"{criterion.capitalize()} score with cross validation"
+    )
+
+    plt.title(f"{criterion.capitalize()} criterion", weight="bold")
+    plt.xlabel("Max depth")
+    plt.ylabel("Accuracy Score")
+    plt.legend()
+
+plt.draw()
+```
+
+On remarque que l'estimation du risque via la cross-validation semble plus régulière que avec une seule estimation sur un jeu de test.
+
+### Q8)
+
+```{python}
+
+for criterion in classifiers.keys():
+    fig, ax = plt.subplots(nrows=3, ncols=2, figsize=(15, 17), sharey=True)
+
+    skip = 2
+    for i, classifier in enumerate(classifiers[criterion][:12:skip]):
+        sub_ax = ax[i//2, i%2]
+        model_selection.LearningCurveDisplay.from_estimator(
+            classifier,
+            X = X, y = y,
+            train_sizes = np.linspace(0.1, 1, 10),
+            line_kw = {"marker": "o"},
+            std_display_style = "fill_between",
+            score_name = "Accuracy",
+            ax = ax[i//2, i%2],
+            cv = model_selection.KFold(5, shuffle=True, random_state=0)
+        )
+
+        sub_ax.set_title(
+            (f"Learning Curve for {criterion.capitalize()} criterion"
+            f"(max_depth={i * skip + 1})"),
+            weight="bold"
+        )
+        
+        sub_ax.legend(["Training Score", "Test Score"])
+```
