@@ -328,6 +328,9 @@ fonttools==4.42.1 ; python_version >= "3.11" and python_version < "3.13" \
 fqdn==1.5.1 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:105ed3677e767fb5ca086a0c1f4bb66ebc3c100be518f0e0d755d9eae164d89f \
     --hash=sha256:3a179af3761e4df6eb2e026ff9e1a3033d3587bf980a0b1b2e1e5d08d7358014
+graphviz==0.20.1 ; python_version >= "3.11" and python_version < "3.13" \
+    --hash=sha256:587c58a223b51611c0cf461132da386edd896a029524ca61a1462b880bf97977 \
+    --hash=sha256:8c58f14adaa3b947daf26c19bc1e98c4e0702cdc31cf99153e6f06904d492bf8
 idna==3.4 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:814f528e8dead7d329833b91c5faa87d60bf71824cd12a7530b5526063d02cb4 \
     --hash=sha256:90b77e79eaa3eba6de819a0c442c0b4ceefc341a7a2ab77d7562bf49f425c5c2
