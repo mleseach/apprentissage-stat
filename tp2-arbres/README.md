@@ -2,9 +2,11 @@
 
 Ce répertoire contient mon [rapport](rapport-tp2-arbres.pdf) du TP2 de hax907x au format pdf ainsi que tout les élements nécessaires à sa reproductibilité.
 
-## Status
+Deux fichiers annexes sont également disponible dans le dossier [graphviz](graphviz)
+ 
+## Auteur
 
-TP pas terminé
+Mathieu Le Séac'h
 
 ## Reproductibilité
 
