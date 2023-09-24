@@ -27,7 +27,25 @@ from lib.tp_arbres_source import (rand_gauss, rand_bi_gauss, rand_tri_gauss,
 
 ### Q1)
 
-Dans le cadre d'une régression, on peut utiliser TODO comme mesure d'homogénéité.
+Dans le cadre d'un arbre de régression, si l'espace $E$ sur lequel on veut prédire est munie d'une distance $d$ (comme c'est le cas des espaces vectioriels de dimension fini), si on a un ensemble fini de points $Y$, on peut définir son centre pour la distance $d$ noté $C_d(Y)$ comme étant le point qui minimise la somme de ses distances aux points de $Y$, ie:
+$$
+C_d(Y) := \arg \min_{c \in E} \sum_{y \in Y} d(y, c)
+$$
+
+Par exemple pour la distance $\mathrm{L}^1$, une médiane est un centre et pour la distance $\mathrm{L}^2$ le barycentre est le centre), on peut ensuite définir la mesure d'homogénéité $H$ comme suit:
+
+\begin{align*}
+H(Y) :&= \sum_{y \in Y} d(y, C_d(Y))
+\\
+\\
+&= \min_{c \in E} \sum_{y \in Y} d(y, c)
+\end{align*}
+
+Ensuite pour la prédiction, on prend simplement le centre des valeurs de la feuille atteinte.
+
+Par exemple, pour la distance $\mathrm{L}^1$, la mesure d'homogénéité d'un ensemble est la somme des distances $\mathrm{L}^1$ de ses éléments à une de ses médianes, et la prédiction d'une feuille est une de ses médiane. Ça correspond au critère `"absolute_error"` de la librairie scikit-learn.
+
+De même pour la distance $\mathrm{L}^2$, la mesure d'homogénéité d'un ensemble est la somme des distances $\mathrm{L}^2$ de ses éléments à son barycentre, et la prédiction d'une feuille est son barycentre. Ça correspond au critère `"squared_error"` de la librairie scikit-learn.
 
 ### Q2)
 
