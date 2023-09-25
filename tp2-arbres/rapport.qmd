@@ -27,25 +27,33 @@ from lib.tp_arbres_source import (rand_gauss, rand_bi_gauss, rand_tri_gauss,
 
 ### Q1)
 
-Dans le cadre d'un arbre de régression, si l'espace $E$ sur lequel on veut prédire est munie d'une distance $d$ (comme c'est le cas des espaces vectioriels de dimension fini), si on a un ensemble fini de points $Y$, on peut définir son centre pour la distance $d$ noté $C_d(Y)$ comme étant le point qui minimise la somme de ses distances aux points de $Y$, ie:
+Le principe d'un arbre de régression est de créer un arbre de décision à partir du partitionnement de nos données d'apprentissage en plusieurs clusters. Ici un cluster désigne une partie des données d'entrainement dont toutes les éléments suivent le même chemin de décisions. Si on dispose d'une fonction de perte $l$, on va vouloir que la prédiction d'un chemin de décision minimise la perte moyenne avec les données du cluster associé au chemin. On note la prédiction du chemin associé au cluster $C$, $\hat{C}$ et on a:
+
 $$
-C_d(Y) := \arg \min_{c \in E} \sum_{y \in Y} d(y, c)
+\hat{C} = \arg \min_{a} \frac{1}{|C|} \sum_{c \in C} l(c, a)
 $$
 
-Par exemple pour la distance $\mathrm{L}^1$, une médiane est un centre et pour la distance $\mathrm{L}^2$ le barycentre est le centre), on peut ensuite définir la mesure d'homogénéité $H$ comme suit:
+Par exemple pour la perte absolue ($l(x,y) := |x-y|$), la prédiction d'un chemin de décision sera la médiane du cluster associé et pour la perte quadratique ($l(x,y) := (x-y)^2$), la prédiction sera le barycentre.
+À partir de là on peut ensuite définir la mesure d'homogénéité $H_l(C)$ comme étant la moyenne des pertes d'un cluster $C$ par rapport à sa prédiction $\hat{C}$, c'est à dire
 
 \begin{align*}
-H(Y) :&= \sum_{y \in Y} d(y, C_d(Y))
+H(C) :&= \frac{1}{|C|} \sum_{c \in C} l(c, \hat{C})
 \\
 \\
-&= \min_{c \in E} \sum_{y \in Y} d(y, c)
+&= \min_{a} \frac{1}{|C|} \sum_{c \in C} l(c, a)
 \end{align*}
 
-Ensuite pour la prédiction, on prend simplement le centre des valeurs de la feuille atteinte.
+En procédant ainsi, à chaque découpage, on va prendre le découpage qui va minimiser la perte moyenne du cluster qu'on découpe. En effet avec $C = C_1 \cup C_2$, on a:
 
-Par exemple, pour la distance $\mathrm{L}^1$, la mesure d'homogénéité d'un ensemble est la somme des distances $\mathrm{L}^1$ de ses éléments à une de ses médianes, et la prédiction d'une feuille est une de ses médiane. Ça correspond au critère `"absolute_error"` de la librairie scikit-learn.
+\begin{align*}
+\frac{|C_1|}{|C|} H(C_1) + \frac{|C_2|}{|C|} H(C_2) &= \frac{1}{|C|}\left(\sum_{c \in C_1} l(c, \hat{C_1}) + \sum_{c \in C_2} l(c, \hat{C_2}) \right)
+\end{align*}
 
-De même pour la distance $\mathrm{L}^2$, la mesure d'homogénéité d'un ensemble est la somme des distances $\mathrm{L}^2$ de ses éléments à son barycentre, et la prédiction d'une feuille est son barycentre. Ça correspond au critère `"squared_error"` de la librairie scikit-learn.
+C'est bien la perte moyenne si on accepte de découper $C$ en $C_1$ et $C_2$, et vu qu'on cherche le découpage $C_1, C_2$ qui minimise l'expression ci-dessus, on cherche bien le découpage qui va minimiser la perte moyenne de notre arbre de régression sur $C$.
+
+Par exemple, pour la perte absolue, la prédiction d'un chemin est une médiane du cluster associé et la mesure d'homogénéité du cluster est la somme des distances de ses éléments à cette médiane (peu importe la médiane le résultat est le même). Dans le cas multivarié on prend la médianne pour chaque variable à prédire. Ça correspond au critère `"absolute_error"` de la librairie scikit-learn.
+
+De même pour la perte quadratique, la prédiction d'un chemin est le barycentre du cluster associé et la mesure d'homogénéité est la somme des distances au carré de ses éléments à son barycentre, ce qui correspond également à la variance empirique biaisée dans le cas où $Y$ est univarié (et à l'inertie de $Y$ dans le cas multivarié), et la prédiction d'une feuille est son barycentre. Ça correspond au critère `"squared_error"` de la librairie scikit-learn.
 
 ### Q2)
 
