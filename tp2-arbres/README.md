@@ -1,8 +1,8 @@
 # TP2
 
-Ce répertoire contient mon [rapport](rapport-tp2-arbres.pdf) du TP2 de hax907x au format pdf ainsi que tout les élements nécessaires à sa reproductibilité.
+Ce répertoire contient mon [rapport](rapport-tp2-arbres.pdf) du TP2 de hax907x au format pdf ainsi que tous les éléments nécessaires à sa reproductibilité.
 
-Deux fichiers annexes sont également disponible dans le dossier [graphviz](graphviz).
+Deux fichiers annexes sont également disponibles dans le dossier [graphviz](graphviz).
 
 ## Auteur
 
@@ -28,7 +28,7 @@ Une fois que vous avez cloné le projet, naviguez jusqu'au répertoire du TP et 
 poetry install
 ```
 
-Ou avec pip si vous utilisez un autre gestionnaire d'environnement virtuel:
+Ou avec pip si vous utilisez un autre gestionnaire d'environnement virtuel :
 
 ```bash
 pip install -r requirements.txt
@@ -42,7 +42,7 @@ Le projet utilise Quarto pour générer le rapport. Vous pouvez le faire en exé
 poetry run quarto render rapport.qmd
 ```
 
-Sinon, si vous utilisez un autre gestionnaire d'environnement virtuel, activez le puis exécutez la commande suivante:
+Sinon, si vous utilisez un autre gestionnaire d'environnement virtuel, activez-le puis exécutez la commande suivante :
 
 ```sh
 quarto render rapport.qmd

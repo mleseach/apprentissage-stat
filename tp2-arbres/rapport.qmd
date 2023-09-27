@@ -27,14 +27,14 @@ from lib.tp_arbres_source import (rand_gauss, rand_bi_gauss, rand_tri_gauss,
 
 ### Q1)
 
-Le principe d'un arbre de régression est de créer un arbre de décision à partir du partitionnement de nos données d'apprentissage en plusieurs clusters. Ici un cluster désigne une partie des données d'entrainement dont toutes les éléments suivent le même chemin de décisions. Si on dispose d'une fonction de perte $l$, on va vouloir que la prédiction d'un chemin de décision minimise la perte moyenne avec les données du cluster associé au chemin. On note la prédiction du chemin associé au cluster $C$, $\hat{C}$ et on a:
+Le principe d'un arbre de régression est de créer un arbre de décision à partir du partitionnement de nos données d'apprentissage en plusieurs clusters. Ici un cluster désigne une partie des données d'entrainement dont tous les éléments suivent le même chemin de décisions. Si on dispose d'une fonction de perte $l$, on va vouloir que la prédiction d'un chemin de décision minimise la perte moyenne avec les données du cluster associé au chemin. On note la prédiction du chemin associé au cluster $C$, $\hat{C}$ et on a :
 
 $$
 \hat{C} = \arg \min_{a} \frac{1}{|C|} \sum_{c \in C} l(c, a)
 $$
 
 Par exemple pour la perte absolue ($l(x,y) := |x-y|$), la prédiction d'un chemin de décision sera la médiane du cluster associé et pour la perte quadratique ($l(x,y) := (x-y)^2$), la prédiction sera le barycentre.
-À partir de là on peut ensuite définir la mesure d'homogénéité $H_l(C)$ comme étant la moyenne des pertes d'un cluster $C$ par rapport à sa prédiction $\hat{C}$, c'est à dire
+À partir de là on peut ensuite définir la mesure d'homogénéité $H_l(C)$ comme étant la moyenne des pertes d'un cluster $C$ par rapport à sa prédiction $\hat{C}$, c'est-à-dire :
 
 \begin{align*}
 H(C) :&= \frac{1}{|C|} \sum_{c \in C} l(c, \hat{C})
@@ -43,7 +43,7 @@ H(C) :&= \frac{1}{|C|} \sum_{c \in C} l(c, \hat{C})
 &= \min_{a} \frac{1}{|C|} \sum_{c \in C} l(c, a)
 \end{align*}
 
-En procédant ainsi, à chaque découpage, on va prendre le découpage qui va minimiser la perte moyenne du cluster qu'on découpe. En effet avec $C = C_1 \cup C_2$, on a:
+En procédant ainsi, à chaque découpage, on va prendre le découpage qui va minimiser la perte moyenne du cluster qu'on découpe. En effet avec $C = C_1 \cup C_2$, on a :
 
 \begin{align*}
 \frac{|C_1|}{|C|} H(C_1) + \frac{|C_2|}{|C|} H(C_2) &= \frac{1}{|C|}\left(\sum_{c \in C_1} l(c, \hat{C_1}) + \sum_{c \in C_2} l(c, \hat{C_2}) \right)
@@ -51,9 +51,9 @@ En procédant ainsi, à chaque découpage, on va prendre le découpage qui va mi
 
 C'est bien la perte moyenne si on accepte de découper $C$ en $C_1$ et $C_2$, et vu qu'on cherche le découpage $C_1, C_2$ qui minimise l'expression ci-dessus, on cherche bien le découpage qui va minimiser la perte moyenne de notre arbre de régression sur $C$.
 
-Par exemple, pour la perte absolue, la prédiction d'un chemin est une médiane du cluster associé et la mesure d'homogénéité du cluster est la somme des distances de ses éléments à cette médiane (peu importe la médiane le résultat est le même). Dans le cas multivarié on prend la médianne pour chaque variable à prédire. Ça correspond au critère `"absolute_error"` de la librairie scikit-learn.
+Par exemple, pour la perte absolue, la prédiction d'un chemin est une médiane du cluster associé et la mesure d'homogénéité du cluster est la somme des distances de ses éléments à cette médiane (peu importe la médiane le résultat est le même). Dans le cas multivarié on prend la médiane pour chaque variable à prédire. Ça correspond au critère `"absolute_error"` de la librairie scikit-learn.
 
-De même pour la perte quadratique, la prédiction d'un chemin est le barycentre du cluster associé et la mesure d'homogénéité est la somme des distances au carré de ses éléments à son barycentre, ce qui correspond également à la variance empirique biaisée dans le cas où $Y$ est univarié (et à l'inertie de $Y$ dans le cas multivarié), et la prédiction d'une feuille est son barycentre. Ça correspond au critère `"squared_error"` de la librairie scikit-learn.
+De même pour la perte quadratique, la prédiction d'un chemin est le barycentre du cluster associé et la mesure d'homogénéité est la somme des distances au carré de ses éléments à son barycentre, ce qui correspond également à la variance empirique biaisée dans le cas où $Y$ est univariée (et à l'inertie de $Y$ dans le cas multivariée), et la prédiction d'une feuille est son barycentre. Ça correspond au critère `"squared_error"` de la librairie scikit-learn.
 
 ### Q2)
 
@@ -110,7 +110,6 @@ print(scores)
 plt.figure()
 for criterion in scores.keys():
     plt.plot(depths, scores[criterion], label=f"{criterion} score")
-    print(f"Scores with {criterion} criterion on training data: {scores[criterion]}")
 
 plt.xlabel('Max depth')
 plt.ylabel('Accuracy Score')
@@ -119,12 +118,12 @@ plt.draw()
 
 ```
 
-Comme on pouvait s'y attendre, la précision des arbres étant testés sur les données d'apprentissage, plus le modèle a de paramètres (ici de profondeur), mieux il va connaître les données d'apprentissage et donc plus il va être précis dans ses prédictions. On atteint même une précision de 100% pour le critère de Gini et 99.3% pour le critère d'Entropie, ça semble indiquer soit que notre modèle est excellent, soit un cas de sur-apprentissage.
+Comme on pouvait s'y attendre, la précision des arbres étant testés sur les données d'apprentissage, plus le modèle a de paramètres (ici de profondeur), mieux il va connaître les données d'apprentissage et donc plus il va être précis dans ses prédictions. On atteint même une précision de 100 % pour le critère de Gini et 99,3 % pour le critère d'Entropie, ça semble indiquer soit que notre modèle est excellent, soit un cas de sur-apprentissage.
 
 
 ### Q3)
 
-Comme expliqué à la question précédente, plus la profondeur sera grande, plus l'erreur sera petite. Ainsi avec les profondeurs testées (de 1 à 13), l'arbre de décision qui minimise l'erreur est celui de profondeur 13, cependant dans notre cas le classificateur atteint déjà une précision parfaite à partir d'une profondeur de 16. Ainsi avec le critère d'entropie et une profondeur de 13 on obtient la classification suivante:
+Comme expliqué à la question précédente, plus la profondeur sera grande, plus l'erreur sera petite. Ainsi avec les profondeurs testées (de 1 à 13), l'arbre de décision qui minimise l'erreur est celui de profondeur 13, cependant dans notre cas le classificateur atteint déjà une précision parfaite à partir d'une profondeur de 16. Ainsi avec le critère d'entropie et une profondeur de 13 on obtient la classification suivante :
 
 ```{python}
 best_depth = np.argmax(scores["entropy"]) + 1
@@ -150,7 +149,7 @@ frontiere(
 
 ```
 
-Dans l'ensemble le damier ressemble bien à celui des données, cependant on remarque certains rectangles semblent assez exotiques et ne servent qu'à capturer une infîme partie des données. C'est un des symptômes du sur-apprentissage.
+Dans l'ensemble le damier ressemble bien à celui des données, cependant on remarque certains rectangles semblent assez exotiques et ne servent qu'à capturer une infime partie des données. C'est un des symptômes du sur-apprentissage.
 
 ### Q4)
 
@@ -158,16 +157,16 @@ Maintenant on cherche à visualiser les règles de décisions apprises par l'arb
 
 ```{python}
 dot_data = tree.export_graphviz(
-    best_classifier, out_file=None, 
-    feature_names=["x", "y"],  
-    filled=True, rounded=True,  
+    best_classifier, out_file=None,
+    feature_names=["x", "y"],
+    filled=True, rounded=True,
     special_characters=True
-)  
-graph = graphviz.Source(dot_data)  
+)
+graph = graphviz.Source(dot_data)
 graph.render("graphviz/checkers")
 ```
 
-En accords avec le score de prédiction du classificateur, une immense majorité des feuilles de l'arbre de décision ont une entropie nulle, c'est à dire que le classificateur a trouvé une règle qui permet de prédire exactement la catégorie d'une donnée d'entraînement. De plus il y a aussi une grande partie de feuilles qui ne servent qu'à prédire une seule donnée d'entraînement (sample = 1), c'est à dire que le classificateur a créé une règle spécifique pour une seule donnée observée. Comme pressenti à la question précédente, on est clairement dans un cas de sur-apprentissage.
+En accords avec le score de prédiction du classificateur, une immense majorité des feuilles de l'arbre de décision ont une entropie nulle, c'est-à-dire que le classificateur a trouvé une règle qui permet de prédire exactement la catégorie d'une donnée d'entraînement. De plus il y a aussi une grande partie de feuilles qui ne servent qu'à prédire une seule donnée d'entraînement (sample = 1), c'est à dire que le classificateur a créé une règle spécifique pour une seule donnée observée. Comme pressenti à la question précédente, on est clairement dans un cas de sur-apprentissage.
 
 ### Q5)
 
@@ -207,11 +206,11 @@ plt.draw()
 
 ```
 
-Pour le critère de Gini on remarque que la précision sur les données de test cesse de croître à partir de la profondeur max de 8. De plus pour les deux critères (de Gini et d'entropie), on remarque que cette fois-ci la précision ne dépasse par le seuil des 90% et ce même en augmentant la profondeur maximum de l'arbre. Donc pour chacun des critères l'estimation de la précision avec les données d'entraînement ont clairement surestimé la précision réelle de l'arbre de décision. Il n'y a plus de doute sur le fait qu'on est dans un cas de sur-apprentissage. En effet notre modèle prédit presque parfaitement les données d'entraînement mais il surestime sa capacité de généralisation à des données de test.
+Pour le critère de Gini on remarque que la précision sur les données de test cesse de croître à partir de la profondeur max de 8. De plus pour les deux critères (de Gini et d'entropie), on remarque que cette fois-ci la précision ne dépasse par le seuil des 90% et ce même en augmentant la profondeur maximum de l'arbre. Donc pour chacun des critères l'estimation de la précision avec les données d'entraînement ont clairement surestimé la précision réelle de l'arbre de décision. Il n'y a plus de doute sur le fait qu'on est dans un cas de sur-apprentissage. En effet notre modèle prédit presque parfaitement les données d'entraînement, mais il surestime sa capacité de généralisation à des données de test.
 
 ### Q6)
 
-On cherche maintenant à reproduire les questions précédentes sur des données réelles issu du jeu de données "digits" fourni par la librairie scikit-learn.
+On cherche maintenant à reproduire les questions précédentes sur des données réelles issu du jeu de données `digits` fourni par la librairie scikit-learn.
 
 ```{python}
 X, y = datasets.load_digits(return_X_y=True)
@@ -255,17 +254,17 @@ best_depth = np.argmax(scores["entropy"]) + 1
 best_classifier = classifiers["entropy"][best_depth - 1]
 
 dot_data = tree.export_graphviz(
-    best_classifier, out_file=None, 
-    filled=True, rounded=True,  
+    best_classifier, out_file=None,
+    filled=True, rounded=True,
     special_characters=True
-)  
-graph = graphviz.Source(dot_data)  
+)
+graph = graphviz.Source(dot_data)
 graph.render("graphviz/digits")
 
 
 ```
 
-on retrouve exactement les mêmes problèmes de surapprentissage avec qu'avec nos données simulées. À savoir que sur les données d'entraînement on atteint une précision proche de 100% alors que sur les données de test on ne dépasse jamais le seuil de 90% de précision, donc une surestimation de la précision dans le premier cas. De plus en analysant l'arbre de décision généré (`graphviz/digits.pdf`), on observe le même phénomène avec la plupart des feuilles d'entropie nulle et avec seulement une ou deux donnée dedans.
+On retrouve exactement les mêmes problèmes de surapprentissage avec qu'avec nos données simulées. À savoir que sur les données d'entraînement on atteint une précision proche de 100 % alors que sur les données de test on ne dépasse jamais le seuil de 90 % de précision, donc une surestimation de la précision dans le premier cas. De plus en analysant l'arbre de décision généré (`graphviz/digits.pdf`), on observe le même phénomène avec la plupart des feuilles d'entropie nulle et avec seulement une ou deux donnée dedans.
 
 ## Méthodes de choix de paramètres - Sélection de modèle
 
@@ -273,7 +272,7 @@ on retrouve exactement les mêmes problèmes de surapprentissage avec qu'avec no
 
 On cherche maintenant à estimer le risque (ou de manière équivalente la précision) de manière plus précise en ayant recours à la cross-validation. Le principe consiste à répéter l'étape d'entraînement et d'estimation du risque sur plusieurs partitions en deux de notre jeu de données puis à prendre la moyenne des risques estimés. On va utiliser la fonction `skleanr.model_selection.cross_val_score` avec l'algorithme KFold.
 
-```{python} 
+```{python}
 
 classifiers = create_all_classifiers(criterions, depths)
 
@@ -341,11 +340,11 @@ for criterion in classifiers.keys():
             f"(max_depth={i * skip + 1})"),
             weight="bold"
         )
-        
+
         sub_ax.legend(["Training Score", "Test Score"])
 ```
 
-On peut remarquer plusieurs choses. La première c'est que lorsqu'on entraîne le modèle avec trop peu de données comparé à la profondeur maximum, le modèle aura toujours tendance à être très bon sur les données d'apprentissage quelque soit sa vrai performance sur les données de test. Ensuite jusqu'à un certain point, plus la profondeur max de l'arbre est grande, plus le classificateur sera performant sur les données de test, même lorsque les données d'apprentissage seront peu nombreuses. Cependant quelque soit la profondeur, on n'arrive pas à dépasser 90% de précision.
+On peut remarquer plusieurs choses. La première c'est que lorsqu'on entraîne le modèle avec trop peu de données par rapport à la profondeur maximum, le modèle aura toujours tendance à être très bon sur les données d'apprentissage quelle que soit sa vraie performance sur les données de test. Ensuite jusqu'à un certain point, plus la profondeur max de l'arbre est grande, plus le classificateur sera performant sur les données de test, même lorsque les données d'apprentissage seront peu nombreuses. Cependant quelle que soit la profondeur de l'arbre, on n'arrive pas à dépasser 90 % de précision.
 
 ### Conclusion
 
