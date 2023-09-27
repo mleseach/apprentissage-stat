@@ -8,12 +8,6 @@ Deux fichiers annexes sont également disponible dans le dossier [graphviz](grap
 
 Mathieu Le Séac'h
 
-## Todo
-
-- ajouter des labels et captions aux figures
-- ajouter des tables pour les résultats au lieu de prints
-- vérifier l'orthographe et les typos
-
 ## Reproductibilité
 
 ### Prérequis
@@ -46,7 +40,7 @@ Le projet utilise Quarto pour générer le rapport. Vous pouvez le faire en exé
 
 ```sh
 poetry run quarto render rapport.qmd
-``` 
+```
 
 Sinon, si vous utilisez un autre gestionnaire d'environnement virtuel, activez le puis exécutez la commande suivante:
 
