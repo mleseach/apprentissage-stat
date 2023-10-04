@@ -251,4 +251,4 @@ print("Score apres reduction de dimension")
 run_svm_cv(X_noisy, y, pca=True)
 ```
 
-On constate que le score ne s'améliore pas avec une PCA. Par ailleurs, pour une raison inconnue lorsque j'ai essayé de faire une PCA avec moins de 50 composantes, l'étape d'apprentissage du SVM linéaire ne s'est pas terminé en temps raisonnable (j'ai interrompu le calcul au bout de 5 minutes).
+On constate que le score ne s'améliore pas significativement avec une PCA. Par ailleurs, pour une raison inconnue lorsque j'ai essayé de faire une PCA avec moins de 50 composantes, l'étape d'apprentissage du SVM linéaire ne s'est pas terminé en temps raisonnable (j'ai interrompu le calcul au bout de 5 minutes).
